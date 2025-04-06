@@ -105,6 +105,9 @@ extern const char HATemperatureStateTopic[];
 extern const char HARGBCommandTopic[];
 extern const char HARGBStateTopic[];
 extern const char HAJsonAttributesTopic[];
+extern const char HAWhiteCommandTopic[];
+extern const char HAWhiteStateTopic[];
+
 
 // misc
 extern const char HAOnline[];

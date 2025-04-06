@@ -122,6 +122,22 @@ bool HALight::setRGBColor(const RGBColor& color, const bool force)
     return false;
 }
 
+
+bool HALight::setWhite(const uint8_t brightness, const bool force)
+{
+    if (!force && brightness == _currentBrightness) {
+        return true;
+    }
+
+    if (publishWhite(brightness)) {
+        _currentBrightness = brightness;
+        return true;
+    }
+
+    return false;
+}
+
+
 void HALight::buildSerializer()
 {
     if (_serializer || !uniqueId()) {
@@ -189,6 +205,12 @@ void HALight::buildSerializer()
         _serializer->topic(AHATOFSTR(HARGBStateTopic));
     }
 
+    if (_features & WhiteFeature) {
+        _serializer->topic(AHATOFSTR(HAWhiteCommandTopic));
+        _serializer->topic(AHATOFSTR(HAWhiteStateTopic));
+    }
+
+
     _serializer->set(HASerializer::WithDevice);
     _serializer->set(HASerializer::WithAvailability);
     _serializer->topic(AHATOFSTR(HAStateTopic));
@@ -209,6 +231,7 @@ void HALight::onMqttConnected()
         publishBrightness(_currentBrightness);
         publishColorTemperature(_currentColorTemperature);
         publishRGBColor(_currentRGBColor);
+        publishWhite(_currentBrightness);
     }
 
     subscribeTopic(uniqueId(), AHATOFSTR(HACommandTopic));
@@ -223,6 +246,10 @@ void HALight::onMqttConnected()
 
     if (_features & RGBFeature) {
         subscribeTopic(uniqueId(), AHATOFSTR(HARGBCommandTopic));
+    }
+
+    if (_features & WhiteFeature) {
+        subscribeTopic(uniqueId(), AHATOFSTR(HAWhiteCommandTopic));
     }
 }
 
@@ -259,6 +286,15 @@ void HALight::onMqttMessage(
     ) {
         handleRGBCommand(payload, length);
     }
+    else if (
+        HASerializer::compareDataTopics(
+            topic,
+            uniqueId(),
+            AHATOFSTR(HAWhiteCommandTopic)
+        )
+    ) {
+        handleWhiteCommand(payload, length);
+    }
 }
 
 bool HALight::publishState(const bool state)
@@ -280,6 +316,19 @@ bool HALight::publishBrightness(const uint8_t brightness)
     HANumeric(brightness, 0).toStr(str);
 
     return publishOnDataTopic(AHATOFSTR(HABrightnessStateTopic), str, true);
+}
+
+
+bool HALight::publishWhite(const uint8_t brightness)
+{
+    if (!(_features & WhiteFeature)) {
+        return false;
+    }
+
+    char str[3 + 1] = {0}; // uint8_t digits with null terminator
+    HANumeric(brightness, 0).toStr(str);
+
+    return publishOnDataTopic(AHATOFSTR(HAWhiteStateTopic), str, true);
 }
 
 bool HALight::publishColorTemperature(const uint16_t temperature)
@@ -369,5 +418,20 @@ void HALight::handleRGBCommand(const uint8_t* cmd, const uint16_t length)
         _rgbColorCallback(color, this);
     }
 }
+
+
+void HALight::handleWhiteCommand(const uint8_t* cmd, const uint16_t length)
+{
+    if (!_whiteCallback) {
+        return;
+    }
+
+    const HANumeric& number = HANumeric::fromStr(cmd, length);
+    
+    if (number.isUInt8()) {
+        _whiteCallback(number.toUInt8(), this);
+    }
+}
+
 
 #endif

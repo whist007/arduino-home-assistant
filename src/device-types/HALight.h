@@ -10,6 +10,7 @@
 #define HALIGHT_BRIGHTNESS_CALLBACK(name) void (*name)(uint8_t brightness, HALight* sender)
 #define HALIGHT_COLOR_TEMP_CALLBACK(name) void (*name)(uint16_t temperature, HALight* sender)
 #define HALIGHT_RGB_COLOR_CALLBACK(name) void (*name)(HALight::RGBColor color, HALight* sender)
+#define HALIGHT_WHITE_CALLBACK(name) void (*name)(uint8_t brightness, HALight* sender)
 
 /**
  * HALight allows adding a controllable light in the Home Assistant panel.
@@ -29,7 +30,8 @@ public:
         DefaultFeatures = 0,
         BrightnessFeature = 1,
         ColorTemperatureFeature = 2,
-        RGBFeature = 4
+        RGBFeature = 4,
+        WhiteFeature = 8
     };
 
     struct RGBColor {
@@ -122,6 +124,8 @@ public:
      */
     bool setRGBColor(const RGBColor& color, const bool force = false);
 
+    bool setWhite(const uint8_t brightness, const bool force = false);
+
     /**
      * Alias for `setState(true)`.
      */
@@ -194,6 +198,9 @@ public:
      */
     inline void setCurrentRGBColor(const RGBColor& color)
         { _currentRGBColor = color; }
+
+    inline void setCurrentWhite(const uint8_t brightness, const bool force)
+    { _currentBrightness = brightness; }
 
     /**
      * Returns the last known RGB color of the light.
@@ -297,6 +304,10 @@ public:
     inline void onRGBColorCommand(HALIGHT_RGB_COLOR_CALLBACK(callback))
         { _rgbColorCallback = callback; }
 
+
+    inline void onWhiteCommand(HALIGHT_WHITE_CALLBACK(callback))
+        { _whiteCallback = callback; }
+
 protected:
     virtual void buildSerializer() override;
     virtual void onMqttConnected() override;
@@ -339,6 +350,10 @@ private:
      */
     bool publishRGBColor(const RGBColor& color);
 
+
+   
+    bool publishWhite(const uint8_t brightness);
+
     /**
      * Parses the given state command and executes the callback with proper value.
      *
@@ -370,6 +385,8 @@ private:
      * @param length Length of the command.
      */
     void handleRGBCommand(const uint8_t* cmd, const uint16_t length);
+
+    void handleWhiteCommand(const uint8_t* cmd, const uint16_t length);
 
     /// Features enabled for the light.
     const uint8_t _features;
@@ -415,6 +432,8 @@ private:
 
     /// The callback that will be called when the RGB command is received from the HA.
     HALIGHT_RGB_COLOR_CALLBACK(_rgbColorCallback);
+
+    HALIGHT_WHITE_CALLBACK(_whiteCallback);
 };
 
 #endif

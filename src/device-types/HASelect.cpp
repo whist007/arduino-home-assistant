@@ -4,7 +4,7 @@
 #include "../HAMqtt.h"
 #include "../utils/HASerializer.h"
 
-HASelect::HASelect(const char* uniqueId) :
+HASelect:: HASelect(const char* uniqueId) :
     HABaseDeviceType(AHATOFSTR(HAComponentSelect), uniqueId),
     _options(nullptr),
     _currentState(-1),
