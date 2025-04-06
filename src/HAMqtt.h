@@ -369,13 +369,13 @@ public:
      */
     void processMessage(const char* topic, const uint8_t* payload, uint16_t length);
 
-#ifdef ARDUINOHA_TEST
+//#ifdef ARDUINOHA_TEST
     inline uint8_t getDevicesTypesNb() const
         { return _devicesTypesNb; }
 
     inline HABaseDeviceType** getDevicesTypes() const
         { return _devicesTypes; }
-#endif
+//#endif
 
 private:
     /// Interval between MQTT reconnects (milliseconds).
